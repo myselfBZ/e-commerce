@@ -13,10 +13,8 @@ func init() {
 	initializers.ConnectDB()
 }
 
-var mux *http.ServeMux
-
 func main() {
-
+	var mux = http.NewServeMux()
 	var port = os.Getenv("PORT")
 	routes.OrdersRoutes(mux)
 	routes.ProductRoutes(mux)
