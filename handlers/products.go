@@ -6,16 +6,26 @@ import (
 	"e-commerce/models"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
+
+	"gorm.io/gorm"
 )
 
-func GetProduct(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
-		return
+func ProductHandle(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		GetProduct(w, r)
+	case http.MethodDelete:
+		DeleteProduct(w, r)
+	case http.MethodPut:
+		UpdateProduct(w, r)
+	case http.MethodPost:
+		CreateProduct(w, r)
 	}
+}
+
+func GetProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		errs.ErrorHandle(w, http.StatusNotFound, errs.InvalidId)
@@ -31,30 +41,15 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		var message = map[string]string{
-			"Error": "Method not allowerd",
-		}
-		json.NewEncoder(w).Encode(message)
-		return
-	}
+
 	var product models.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		var message = map[string]string{
-			"message": "Invalid data",
-		}
-		json.NewEncoder(w).Encode(message)
-		r.Body.Close()
+		errs.ErrorHandle(w, http.StatusBadRequest, errs.InvalidJson)
 		return
 	}
-	defer r.Body.Close()
-	log.Println(product)
 	result := initializers.DB.Create(&product)
 	if result.Error != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(result.Error)
+		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 		return
 	}
 	var message = map[string]string{
@@ -65,13 +60,6 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProducts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		var message = map[string]string{
-			"Message": "Method not allowed",
-		}
-		json.NewEncoder(w).Encode(message)
-		return
-	}
 	var products []models.Product
 	initializers.DB.Find(&products)
 
@@ -80,45 +68,27 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprintf(w, "Method not allowed")
-		return
-	}
-
 	id := r.PathValue("id")
 
 	productId, err := strconv.Atoi(id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "Invalid id")
+		errs.ErrorHandle(w, http.StatusBadRequest, errs.InvalidId)
 		return
 	}
 	result := initializers.DB.Delete(&models.Product{}, productId)
 	if result.Error != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Internal server error")
-		return
-	}
-	if result.RowsAffected == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Not found")
+		if result.Error == gorm.ErrRecordNotFound {
+			errs.ErrorHandle(w, http.StatusNotFound, errs.NotFound)
+			return
+		}
+		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Deleted successfully")
-
+	json.NewEncoder(w).Encode(map[string]string{"message": "Deleted successfully"})
 }
 
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		var message = map[string]string{
-			"Error": "Method Not allowed",
-		}
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(message)
-		return
-	}
 	fmt.Println("Request is recieved")
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -130,23 +100,18 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	var newProduct models.Product
 	if err := json.NewDecoder(r.Body).Decode(&newProduct); err != nil {
-		var message = map[string]string{
-			"error": "Invalid data",
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(message)
-		r.Body.Close()
+		errs.ErrorHandle(w, http.StatusBadRequest, errs.InvalidJson)
 		return
 	}
-	defer r.Body.Close()
 	var oldProduct models.Product
 	result := initializers.DB.First(&oldProduct, id)
 
 	if result.Error != nil {
-		var message = map[string]string{
-			"Error": "Not found",
+		if result.Error == gorm.ErrRecordNotFound {
+			errs.ErrorHandle(w, http.StatusNotFound, errs.NotFound)
+			return
 		}
-		errs.ErrorHandle(w, 400, message)
+		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 		return
 	}
 	if result := initializers.DB.Model(&oldProduct).Updates(models.Product{
@@ -155,14 +120,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		Price:        newProduct.Price,
 		CountInStock: newProduct.CountInStock,
 	}); result.Error != nil {
-		fmt.Println("Error in the database ")
-	}
-	if result.RowsAffected == 0 {
-		var message = map[string]string{
-			"Error": "Not found",
-		}
-		errs.ErrorHandle(w, 404, message)
-		return
+		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 	}
 	json.NewEncoder(w).Encode(map[string]string{"Message": "Updated successfully"})
 

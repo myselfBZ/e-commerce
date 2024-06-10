@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 )
-
+     
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
@@ -46,6 +46,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
 		return
+    
 	}
 	var users []models.User
 	if result := initializers.DB.Find(&users); result.Error != nil {
