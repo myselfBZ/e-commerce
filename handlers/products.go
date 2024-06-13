@@ -5,7 +5,6 @@ import (
 	"e-commerce/initializers"
 	"e-commerce/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -89,7 +88,6 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Request is recieved")
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		var message = map[string]string{

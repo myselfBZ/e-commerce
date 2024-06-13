@@ -6,6 +6,7 @@ import (
 	"e-commerce/models"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -17,7 +18,10 @@ func OrdersHandle(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 		GetOrders(w, r)
-	}
+	
+    case http.MethodDelete:
+        DeleteOrder(w, r)
+    }
 }
 
 func CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -66,4 +70,21 @@ func GetOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(orders)
+}
+
+
+func DeleteOrder(w http.ResponseWriter, r *http.Request){
+    id, err := strconv.Atoi(r.PathValue("id"))
+    if err != nil{
+        errs.ErrorHandle(w, http.StatusBadRequest, errs.InvalidId)
+        return 
+    }
+    var order models.Order
+    if err := initializers.DB.Model(&order).Where("id = ?", id).Delete(&order).Error; err != nil{
+        errs.ErrorHandle(w, http.StatusNotFound, errs.NotFound)
+        return 
+
+    }
+    w.WriteHeader(http.StatusNoContent)
+
 }
