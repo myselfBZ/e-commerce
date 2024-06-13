@@ -20,10 +20,10 @@ type User struct {
 type Order struct {
 	ID         uint
 	Price      int         `json:"price"`
-	Address    Address     `json:"address"`
+    Address    Address     `json:"address" gorm:"constraint:onDelete:CASCADE;"`
 	AddressID  int         `json:"addressId"`
 	CustomerID int         `json:"customer"`
-	OrderItems []OrderItem `json:"orderItems"`
+    OrderItems []OrderItem `gorm:"constraint:onDelete:CASCADE;" json:"orderItems"`
 }
 
 type Address struct {

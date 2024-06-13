@@ -13,18 +13,9 @@ func init() {
 }
 
 func main() {
-	var errs = []error{
-		initializers.DB.AutoMigrate(&models.Address{}),
-		initializers.DB.AutoMigrate(&models.User{}),
-		initializers.DB.AutoMigrate(&models.Product{}),
-		initializers.DB.AutoMigrate(&models.Order{}),
-		initializers.DB.AutoMigrate(&models.OrderItem{}),
-	}
+    err := initializers.DB.AutoMigrate(&models.User{}, &models.Product{}, &models.Order{}, &models.Address{},&models.OrderItem{})
+    if err != nil{
+        log.Fatal("You messed up with migrating the database")
 
-	for _, err := range errs {
-		if err != nil {
-			log.Fatal("Error Migrating", err)
-			break
-		}
-	}
+    }
 }
