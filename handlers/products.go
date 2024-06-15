@@ -21,7 +21,9 @@ func ProductHandle(w http.ResponseWriter, r *http.Request) {
 		UpdateProduct(w, r)
 	case http.MethodPost:
 		CreateProduct(w, r)
-	}
+    
+    }
+
 }
 
 func GetProduct(w http.ResponseWriter, r *http.Request) {

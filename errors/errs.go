@@ -25,7 +25,14 @@ var InternalServer = map[string]string{
 	"Error": "Server error",
 }
 
+
+var Success = map[string]string{
+    "message":"Success",
+}
+
 func ErrorHandle(w http.ResponseWriter, s int, m map[string]string) {
 	w.WriteHeader(s)
 	json.NewEncoder(w).Encode(s)
 }
+
+

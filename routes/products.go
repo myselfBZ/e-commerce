@@ -6,5 +6,6 @@ import (
 )
 
 func ProductRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/products", handlers.ProductHandle)
+	mux.HandleFunc("/products/{id}", handlers.ProductHandle)
+	mux.HandleFunc("/products", handlers.GetProducts)
 }

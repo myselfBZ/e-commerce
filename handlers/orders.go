@@ -80,11 +80,12 @@ func DeleteOrder(w http.ResponseWriter, r *http.Request){
         return 
     }
     var order models.Order
-    if err := initializers.DB.Model(&order).Where("id = ?", id).Delete(&order).Error; err != nil{
+    if err := initializers.DB.Delete(&order, id).Error; err != nil{
         errs.ErrorHandle(w, http.StatusNotFound, errs.NotFound)
         return 
 
     }
-    w.WriteHeader(http.StatusNoContent)
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(errs.Success)
 
 }

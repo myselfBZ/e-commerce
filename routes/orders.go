@@ -6,5 +6,6 @@ import (
 )
 
 func OrdersRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/orders", handlers.OrdersHandle)
+    mux.HandleFunc("/orders/{id}", handlers.OrdersHandle)
+    mux.HandleFunc("/orders", handlers.OrdersHandle)
 }
