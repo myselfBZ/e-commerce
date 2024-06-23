@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func OrdersRoutes(mux *http.ServeMux) {
-    mux.HandleFunc("/orders/{id}", handlers.OrdersHandle)
-    mux.HandleFunc("/orders", handlers.OrdersHandle)
+func OrdersRoutes(mux *http.ServeMux, h *handlers.Handler) {
+    mux.HandleFunc("/orders/{id}", h.OrdersHandle)
+    mux.HandleFunc("/orders", h.GetOrders)
 }

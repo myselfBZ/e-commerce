@@ -46,9 +46,9 @@ func (u *User) Update(newUser *User, id int) error {
 }
 
 
-func (u *User) GetUsers(id int) (*User, error){
-    var user *User 
-    if result := initializers.DB.First(user, id); result.Error != nil{
+func (u *User) GetUsers() ([]User, error){
+    var user []User 
+    if result := initializers.DB.Find(user); result.Error != nil{
         return nil, result.Error
     }
 
