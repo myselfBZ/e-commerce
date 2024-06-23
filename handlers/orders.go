@@ -11,20 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func OrdersHandle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OrdersHandle(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		CreateOrder(w, r)
+		h.CreateOrder(w, r)
 
 	case http.MethodGet:
-		GetOrders(w, r)
+		h.GetOrders(w, r)
 	
     case http.MethodDelete:
-        DeleteOrder(w, r)
+        h.DeleteOrder(w, r)
     }
 }
 
-func CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
@@ -54,36 +54,39 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	if result := initializers.DB.Create(&order); result.Error != nil {
-		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
-		return
-	}
+    err := order.Create(&order)
+    if err != nil{
+        w.WriteHeader(http.StatusInternalServerError)
+        return 
+    }
 	json.NewEncoder(w).Encode(order)
 }
 
-func GetOrders(w http.ResponseWriter, r *http.Request) {
-	var orders []models.Order
-	if result := initializers.DB.Find(&orders); result.Error != nil {
-		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
-		return
-	}
+func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
+    var orders, err = h.order.GetAll()
+    if err != nil{
+        w.WriteHeader(http.StatusInternalServerError)
+        return 
+    }
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(orders)
 }
 
 
-func DeleteOrder(w http.ResponseWriter, r *http.Request){
+func (h *Handler)DeleteOrder(w http.ResponseWriter, r *http.Request){
     id, err := strconv.Atoi(r.PathValue("id"))
     if err != nil{
         errs.ErrorHandle(w, http.StatusBadRequest, errs.InvalidId)
         return 
     }
-    var order models.Order
-    if err := initializers.DB.Delete(&order, id).Error; err != nil{
-        errs.ErrorHandle(w, http.StatusNotFound, errs.NotFound)
+    err = h.order.Delete(id)
+    if err != nil{
+        if err == gorm.ErrRecordNotFound{
+            w.WriteHeader(http.StatusNotFound)
+            return 
+        }
+        w.WriteHeader(http.StatusInternalServerError)
         return 
-
     }
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(errs.Success)
