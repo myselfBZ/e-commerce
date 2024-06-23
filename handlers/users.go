@@ -2,23 +2,22 @@ package handlers
 
 import (
 	errs "e-commerce/errors"
-	"e-commerce/initializers"
 	"e-commerce/models"
 	"encoding/json"
 	"net/http"
 	"time"
 )
 
-func UserHandler(w http.ResponseWriter, r *http.Request) {
+func(h *Handler) UserHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		GetUsers(w, r)
+		h.GetUsers(w, r)
 	case http.MethodPost:
-		CreateUser(w, r)
+		h.CreateUser(w, r)
 	}
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler)CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
 		return
@@ -43,7 +42,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if result := initializers.DB.Create(&models.User{Name: user.Name, LastName: user.LastName, BirthDate: date}); result.Error != nil {
+	if err := h.user.Create(&models.User{Name: user.Name, LastName: user.LastName, BirthDate: date}); err != nil {
 		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 
 		return
@@ -51,14 +50,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"Message": "Created!"})
 }
 
-func GetUsers(w http.ResponseWriter, r *http.Request) {
+func (h *Handler)GetUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
 		return
 
 	}
-	var users []models.User
-	if result := initializers.DB.Find(&users); result.Error != nil {
+	var users, err = h.user.GetUsers()
+	if err != nil {
 		errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
 		return
 	}

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"e-commerce/handlers"
 	"e-commerce/initializers"
+	"e-commerce/models"
 	"e-commerce/routes"
 	"log"
 	"net/http"
@@ -16,9 +18,10 @@ func init() {
 func main() {
 	var mux = http.NewServeMux()
 	var port = os.Getenv("PORT")
-	routes.OrdersRoutes(mux)
-	routes.ProductRoutes(mux)
-	routes.UsersRoutes(mux)
+    var handler = handlers.NewHandler(&models.Product{}, &models.User{}, &models.Order{}, &models.OrderItem{})
+	routes.OrdersRoutes(mux, handler)
+	routes.ProductRoutes(mux, handler)
+	routes.UsersRoutes(mux, handler)
 	var server = http.Server{
 		Handler: mux,
 		Addr:    port,
