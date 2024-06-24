@@ -1,6 +1,9 @@
 package models
 
-import "e-commerce/initializers"
+import (
+	"e-commerce/initializers"
+	"fmt"
+)
 
 type Product struct {
 	ID           uint   `gorm:"primaryKey" json:"productId"`
@@ -11,7 +14,8 @@ type Product struct {
 }
 
 func (p *Product) Create(prod *Product) error {
-    if result := initializers.DB.Model(p).Create(prod); result.Error != nil{
+    if result := initializers.DB.Model(prod).Create(prod); result.Error != nil{
+        fmt.Println("SOmething went wrong")
         return result.Error
     }
     return nil 	

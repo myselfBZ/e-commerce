@@ -4,6 +4,7 @@ import (
 	errs "e-commerce/errors"
 	"e-commerce/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,11 +19,9 @@ func (h *Handler) ProductHandle(w http.ResponseWriter, r *http.Request) {
 		h.DeleteProduct(w, r)
 	case http.MethodPut:
 		h.UpdateProduct(w, r)
-	case http.MethodPost:
-		h.CreateProduct(w, r)
-    
-    }
-
+    default:
+        errs.ErrorHandle(w, http.StatusMethodNotAllowed, errs.MethodNotAllowed)
+}
 }
 
 func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +48,12 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
     }
     err := h.prod.Create(&prod)
     if err != nil{
+        fmt.Println("something went wrong ")
         errs.ErrorHandle(w, http.StatusInternalServerError, errs.InternalServer)
         return 
+
     }
+    fmt.Println("great we reached to the message")
     var msg = map[string]string{
         "message":"Created!",
     }
